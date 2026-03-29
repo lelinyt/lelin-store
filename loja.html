@@ -500,53 +500,38 @@ for(let i=0;i<22;i++){
   cont.appendChild(el);
 }
 
-// ── PRODUCTS ──
-const SERVER = 'https://lelin-store-production.up.railway.app';
+// ── PRODUTOS — JSONBin direto (sem servidor) ──
+const JSONBIN_API_KEY = '$2a$10$/8QEAUdYPj9DMKuU3w7zu.7RQ067W6yZOC7gQm6ugq5Mb8feGVGce';
+const JSONBIN_BIN_ID  = '69c93022ed015c742bc9be33';
+const JSONBIN_URL     = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 
 let products = [];
 
 async function loadProducts(){
   try {
-    const resp = await fetch(`${SERVER}/produtos`);
+    const resp = await fetch(`${JSONBIN_URL}/latest`, {
+      headers: {
+        'X-Master-Key': JSONBIN_API_KEY,
+        'X-Bin-Meta': 'false'
+      }
+    });
     const data = await resp.json();
-    if(Array.isArray(data) && data.length > 0){
-      products = data;
-    } else {
-      products = [
-        {id:1,name:'Robux 400',price:'19,90',emoji:'💎',img:''},
-        {id:2,name:'Robux 800',price:'37,90',emoji:'💰',img:''},
-        {id:3,name:'Robux 1700',price:'74,90',emoji:'🏆',img:''},
-        {id:4,name:'VIP Premium',price:'14,90',emoji:'⭐',img:''},
-        {id:5,name:'Game Pass Exclusivo',price:'9,90',emoji:'🎮',img:''},
-        {id:6,name:'Skin Rara',price:'24,90',emoji:'🎨',img:''},
-        {id:7,name:'Pack Iniciante',price:'12,90',emoji:'🎯',img:''},
-        {id:8,name:'Conta Premium',price:'49,90',emoji:'👑',img:''},
-      ];
-    }
+    const lista = Array.isArray(data) ? data : (data.produtos || []);
+    products = lista;
   } catch(e){
-    products = [
-      {id:1,name:'Robux 400',price:'19,90',emoji:'💎',img:''},
-      {id:2,name:'Robux 800',price:'37,90',emoji:'💰',img:''},
-      {id:3,name:'Robux 1700',price:'74,90',emoji:'🏆',img:''},
-      {id:4,name:'VIP Premium',price:'14,90',emoji:'⭐',img:''},
-      {id:5,name:'Game Pass Exclusivo',price:'9,90',emoji:'🎮',img:''},
-      {id:6,name:'Skin Rara',price:'24,90',emoji:'🎨',img:''},
-      {id:7,name:'Pack Iniciante',price:'12,90',emoji:'🎯',img:''},
-      {id:8,name:'Conta Premium',price:'49,90',emoji:'👑',img:''},
-    ];
+    products = [];
+    console.error('Erro ao carregar produtos:', e);
   }
   renderProducts();
 }
 
 async function saveProducts(){
-  const token = sessionStorage.getItem('adm_token');
-  if(!token) return;
   try {
-    await fetch(`${SERVER}/produtos`, {
-      method: 'POST',
+    await fetch(JSONBIN_URL, {
+      method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'X-Master-Key': JSONBIN_API_KEY
       },
       body: JSON.stringify(products)
     });
@@ -635,45 +620,38 @@ async function doLogin(){
 
   if(!u || !p){ showLoginError('⚠️ Preencha usuário e senha.'); return; }
 
-  // Desabilita botão durante a requisição
   const btn = document.querySelector('.login-btn');
   btn.disabled = true;
   btn.textContent = 'VERIFICANDO...';
 
-  try {
-    const resp = await fetch(`${SERVER}/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user: u, pass: p })
-    });
+  // Login local — sem servidor
+  const ADMIN_USER = 'Lelinstore';
+  const ADMIN_PASS = 'lelin123'; // ← TROQUE PARA SUA SENHA DESEJADA
 
-    const data = await resp.json();
-
-    if(data.success && data.token){
-      // Guarda o token na sessão (some ao fechar o navegador)
-      sessionStorage.setItem('adm_token', data.token);
-      loginAttempts = 0;
-      closeLogin();
-      openAdm();
-    } else {
-      loginAttempts++;
-      document.getElementById('loginPass').value = '';
-
-      if(resp.status === 429 || loginAttempts >= 5){
-        loginLocked = true;
-        showLoginError('⛔ Conta bloqueada por 60s após muitas tentativas.');
-        clearTimeout(lockTimer);
-        lockTimer = setTimeout(()=>{ loginLocked=false; loginAttempts=0; showLoginError(''); }, 60000);
-      } else {
-        showLoginError(`⚠️ Login ou senha incorretos. (${loginAttempts}/5)`);
-      }
-    }
-  } catch(e) {
-    showLoginError('⚠️ Não foi possível conectar ao servidor. Ele está rodando?');
-  } finally {
+  if(u === ADMIN_USER && p === ADMIN_PASS){
+    sessionStorage.setItem('adm_token', 'local-admin-ok');
+    loginAttempts = 0;
     btn.disabled = false;
     btn.textContent = 'ENTRAR';
+    closeLogin();
+    openAdm();
+    return;
   }
+
+  loginAttempts++;
+  document.getElementById('loginPass').value = '';
+
+  if(loginAttempts >= 5){
+    loginLocked = true;
+    showLoginError('⛔ Conta bloqueada por 60s após muitas tentativas.');
+    clearTimeout(lockTimer);
+    lockTimer = setTimeout(()=>{ loginLocked=false; loginAttempts=0; showLoginError(''); }, 60000);
+  } else {
+    showLoginError(`⚠️ Login ou senha incorretos. (${loginAttempts}/5)`);
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'ENTRAR';
 }
 function showLoginError(msg){
   const el = document.getElementById('loginError');
