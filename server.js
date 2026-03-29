@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const { MongoClient } = require('mongodb');
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: '*' }));
 app.use(express.json());
 
 const JWT_SECRET = process.env.JWT_SECRET || 'troque-este-segredo';
