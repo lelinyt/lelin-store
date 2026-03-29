@@ -500,21 +500,16 @@ for(let i=0;i<22;i++){
   cont.appendChild(el);
 }
 
-// ── PRODUTOS — JSONBin direto (sem servidor) ──
-const JSONBIN_API_KEY = '$2a$10$/8QEAUdYPj9DMKuU3w7zu.7RQ067W6yZOC7gQm6ugq5Mb8feGVGce'; // X-Master-Key
-const JSONBIN_BIN_ID  = '69c941b16860e0745b00bdc1';
-const JSONBIN_URL     = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+// ── PRODUTOS — Firebase Realtime Database ──
+const FIREBASE_URL = 'https://lelin-store-default-rtdb.firebaseio.com/produtos.json';
 
 let products = [];
 
 async function loadProducts(){
   try {
-    const resp = await fetch(`${JSONBIN_URL}/latest`, {
-      headers: { 'X-Bin-Meta': 'false' }
-    });
+    const resp = await fetch(FIREBASE_URL);
     const data = await resp.json();
-    const lista = Array.isArray(data) ? data : [];
-    products = lista.filter(p => p.name);
+    products = Array.isArray(data) ? data : [];
   } catch(e){
     products = [];
     console.error('Erro ao carregar produtos:', e);
@@ -524,12 +519,9 @@ async function loadProducts(){
 
 async function saveProducts(){
   try {
-    await fetch(JSONBIN_URL, {
+    await fetch(FIREBASE_URL, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': JSONBIN_API_KEY
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(products)
     });
   } catch(e){ console.error('Erro ao salvar produtos:', e); }
