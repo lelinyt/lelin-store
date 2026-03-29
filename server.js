@@ -5,7 +5,8 @@ const jwt = require('jsonwebtoken');
 
 const app = express();
 app.use(cors({ origin: '*' }));
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 const JWT_SECRET = process.env.JWT_SECRET || 'troque-este-segredo';
 const JSONBIN_API_KEY = process.env.JSONBIN_API_KEY;
