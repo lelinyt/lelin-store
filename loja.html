@@ -501,28 +501,57 @@ for(let i=0;i<22;i++){
 }
 
 // ── PRODUCTS ──
-function loadProducts(){
+const SERVER = 'https://lelin-store-production.up.railway.app';
+
+let products = [];
+
+async function loadProducts(){
   try {
-    const raw = localStorage.getItem('lelinstore_products');
-    if(!raw) return null;
-    const parsed = JSON.parse(raw);
-    if(!Array.isArray(parsed)) return null;
-    return parsed;
-  } catch(e){ return null; }
+    const resp = await fetch(`${SERVER}/produtos`);
+    const data = await resp.json();
+    if(Array.isArray(data) && data.length > 0){
+      products = data;
+    } else {
+      products = [
+        {id:1,name:'Robux 400',price:'19,90',emoji:'💎',img:''},
+        {id:2,name:'Robux 800',price:'37,90',emoji:'💰',img:''},
+        {id:3,name:'Robux 1700',price:'74,90',emoji:'🏆',img:''},
+        {id:4,name:'VIP Premium',price:'14,90',emoji:'⭐',img:''},
+        {id:5,name:'Game Pass Exclusivo',price:'9,90',emoji:'🎮',img:''},
+        {id:6,name:'Skin Rara',price:'24,90',emoji:'🎨',img:''},
+        {id:7,name:'Pack Iniciante',price:'12,90',emoji:'🎯',img:''},
+        {id:8,name:'Conta Premium',price:'49,90',emoji:'👑',img:''},
+      ];
+    }
+  } catch(e){
+    products = [
+      {id:1,name:'Robux 400',price:'19,90',emoji:'💎',img:''},
+      {id:2,name:'Robux 800',price:'37,90',emoji:'💰',img:''},
+      {id:3,name:'Robux 1700',price:'74,90',emoji:'🏆',img:''},
+      {id:4,name:'VIP Premium',price:'14,90',emoji:'⭐',img:''},
+      {id:5,name:'Game Pass Exclusivo',price:'9,90',emoji:'🎮',img:''},
+      {id:6,name:'Skin Rara',price:'24,90',emoji:'🎨',img:''},
+      {id:7,name:'Pack Iniciante',price:'12,90',emoji:'🎯',img:''},
+      {id:8,name:'Conta Premium',price:'49,90',emoji:'👑',img:''},
+    ];
+  }
+  renderProducts();
 }
 
-let products = loadProducts() || [
-  {id:1,name:'Robux 400',price:'19,90',emoji:'💎',img:''},
-  {id:2,name:'Robux 800',price:'37,90',emoji:'💰',img:''},
-  {id:3,name:'Robux 1700',price:'74,90',emoji:'🏆',img:''},
-  {id:4,name:'VIP Premium',price:'14,90',emoji:'⭐',img:''},
-  {id:5,name:'Game Pass Exclusivo',price:'9,90',emoji:'🎮',img:''},
-  {id:6,name:'Skin Rara',price:'24,90',emoji:'🎨',img:''},
-  {id:7,name:'Pack Iniciante',price:'12,90',emoji:'🎯',img:''},
-  {id:8,name:'Conta Premium',price:'49,90',emoji:'👑',img:''},
-];
-
-function saveProducts(){ localStorage.setItem('lelinstore_products', JSON.stringify(products)); }
+async function saveProducts(){
+  const token = sessionStorage.getItem('adm_token');
+  if(!token) return;
+  try {
+    await fetch(`${SERVER}/produtos`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(products)
+    });
+  } catch(e){ console.error('Erro ao salvar produtos:', e); }
+}
 
 function formatPrice(p){
   // Strip any existing R$ prefix then re-add
@@ -612,7 +641,7 @@ async function doLogin(){
   btn.textContent = 'VERIFICANDO...';
 
   try {
-    const resp = await fetch('https://lelin-store-production.up.railway.app/login', {
+    const resp = await fetch('http://localhost:3000/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user: u, pass: p })
@@ -752,7 +781,7 @@ function addProduct(){
   newImgData='';
 }
 
-renderProducts();
+loadProducts();
 </script>
 </body>
 </html>
