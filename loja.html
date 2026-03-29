@@ -612,7 +612,7 @@ async function doLogin(){
   btn.textContent = 'VERIFICANDO...';
 
   try {
-    const resp = await fetch('http://localhost:3000/login', {
+    const resp = await fetch('https://lelin-store-production.up.railway.app/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user: u, pass: p })
